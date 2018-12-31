@@ -1,0 +1,10 @@
+extends layout
+
+block content
+  h1= title
+  p nodemon added for reals!
+  p Welcome to #{title}
+  div(class ="g-signin2" data-onsuccess="onSignIn" data-theme="dark")
+  a(href="#" onclick="signOut();") Sign Out
+  div#userId
+  script(src="dist/login.js")
