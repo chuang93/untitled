@@ -1,5 +1,6 @@
 var createError = require('http-errors');
 var express = require('express');
+var session = require( 'express-session');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
@@ -9,6 +10,7 @@ var usersRouter = require('./routes/users');
 var app = express();
 
 console.log("Current Server __dirname is : " + __dirname);
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
@@ -22,6 +24,26 @@ app.use(sassMiddleware({
   indentedSyntax: true, // true = .sass and false = .scss
   sourceMap: true
 }));
+
+app.use(session({
+  key: 'user_sid',
+  secret: 'somerandonstuffs',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    expires: 600000
+  }
+}));
+//Clear cookie if the session doesnt exist anymore (must be initialized AFTER cookieparser()
+app.use((req, res, next) => {
+  if (req.cookies.user_sid && !req.session.user) {
+    console.log("cookie user SID exists, session does not, clearing cookie.");
+    res.clearCookie('user_sid');
+  }
+  console.log("user_sid: " + req.cookies.user_sid + " session user: " + req.session.user );
+  next();
+});
+
 //ONLY ONE PARAMTER PASSED IN will default the first path parameter to '/'.
 //TODO:: USE ONLY STATIC FILES FROM DISTRIBUTION BUNDLES AND NOT PUBLIC.
 app.use('/dist', express.static(path.join(__dirname, 'dist')));
