@@ -12,12 +12,12 @@ function onSignIn(googleUser) {
     var id_token = googleUser.getAuthResponse().id_token;
     console.log("ID Token: " + id_token);
     var xhr = new XMLHttpRequest();
-    verifyURL = window.appServicesURL + "verify";
+    verifyURL = window.serverURL + "login";
     console.log(verifyURL);
     xhr.open('POST', verifyURL);
     xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
     xhr.onload = function() {
-        console.log(xhr.responseText);
+        console.log(xhr.response);
         document.getElementById("userId").textContent = "Welcome " + profile.getName();
     };
     xhr.onerror = function(){

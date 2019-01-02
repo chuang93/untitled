@@ -1,10 +1,11 @@
 var createError = require('http-errors');
 var express = require('express');
+var uuid = require('uuid');
 var session = require( 'express-session');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-var sassMiddleware = require('node-sass-middleware');
+var sassMiddleware = require('node-sass-middleware')
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var app = express();
@@ -14,6 +15,7 @@ console.log("Current Server __dirname is : " + __dirname);
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
+app.set('json spaces', 2);
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -26,8 +28,10 @@ app.use(sassMiddleware({
 }));
 
 app.use(session({
-  key: 'user_sid',
-  secret: 'somerandonstuffs',
+  genid: function(req){
+    return uuid();
+  },
+  secret: 'mynodeappsecret',
   resave: false,
   saveUninitialized: false,
   cookie: {
@@ -40,7 +44,6 @@ app.use((req, res, next) => {
     console.log("cookie user SID exists, session does not, clearing cookie.");
     res.clearCookie('user_sid');
   }
-  console.log("user_sid: " + req.cookies.user_sid + " session user: " + req.session.user );
   next();
 });
 
