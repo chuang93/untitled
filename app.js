@@ -56,6 +56,7 @@ app.use((req, res, next) => {
 //TODO:: USE ONLY STATIC FILES FROM DISTRIBUTION BUNDLES AND NOT PUBLIC.
 app.use('/dist', express.static(path.join(__dirname, 'dist')));
 app.use('/', express.static(path.join(__dirname, 'public')));
+app.use('/',  express.static(path.join(__dirname, 'public/images')));
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 

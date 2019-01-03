@@ -8,7 +8,7 @@ var constants = require("../public/javascripts/Constants");
 var sessionChecker = function(req, res, next) {
   if(req.session)
   {
-      console.log(req.session);
+      console.log("Session ID: " + req.session.id);
       if (req.session.key) {
           console.log("Session and Key already exist, redirecting to homepage :)");
           res.render('index', {title: "Welcome Back: " + req.session.key.email});
@@ -55,7 +55,8 @@ router.get('/login', sessionChecker, function(req, res){
         checkStatus(response);
         response.json().then(function (json){
             req.session.key = json; //store all session variables in key object. When session deletes this object is deleted too.
-            console.log(req.session);
+            console.log("new session key: ");
+            console.log(json);
             delete json.token;
             //store user variables here, no need to send info back to the client.
             res.status(200).json(routeUtility.getResponseJson(false, "Successfully Authenticated this session :)."));
