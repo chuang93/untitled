@@ -2,30 +2,48 @@ var express = require('express');
 var router = express.Router();
 var util = require("util");
 var fetch = require("node-fetch");
+var routeUtility = require("./routeUtility");
 var constants = require("../public/javascripts/Constants");
 // middleware function to check for logged-in users
-var sessionChecker = (req, res, next) => {
-  if (req.session.user && req.cookies.user_sid) {
-    console.log("Logged in: redirecting to homepage.");
-    res.render('index', {title: "Logged In Index Page."});
-  } else {
-    next();
+var sessionChecker = function(req, res, next) {
+  if(req.session)
+  {
+      console.log(req.session);
+      if (req.session.key) {
+          console.log("Session and Key already exist, redirecting to homepage :)");
+          res.render('index', {title: "Welcome Back: " + req.session.key.email});
+      } else {
+          console.log("Session Key not populated with user info, please login first.");
+          res.render('index', {title: "Please Log In to access full features."});
+      }
+  }else{
+      //THIS CONDITION NEVER SEEMS TO PASS, WHEN YOU DESTROY THE SESSION IT SEEMS TO AUTOMATICALLY RECREATE.
+      console.log("No session exists, creating a fresh session.");
+      req.session.regenerate(req, function(err){
+         if(err){
+             console.log("error regenerating session: " + err);
+         } else{
+             console.log("Created Fresh Session, please login to authenticate.");
+         }
+         res.render('index', {title:"Please Log In to access full features."});
+      });
   }
 };
-/* GET home page.  redirect to login through session checker if not logged in.*/
+//Not logged in homepage
 router.get('/', sessionChecker, function(req, res, next) {
   //if fail session Checker Callback
-  res.redirect('/login');
+
+  res.render('index', {title: "Please Log in to edit!"});
 });
 
 router.get('/login', sessionChecker, function(req, res){
   res.render("index", {title: "Not Logged In"}); //render the html but do not redirect
-}).post('/login', function(request, response){
+}).post('/login', function(req, res){
   //util inspect is very verbose, need to comment the below line when not using.
   //console.log(util.inspect(req, false, null, true /* enable colors */));
   //Send this ID token to java backend and use GoogleVerifier to generate user info for validation there
   verifyURL = constants.SERVICES_URL + "verify";
-  idToken = request.body.idtoken;
+  idToken = req.body.idtoken;
   //if you want to use query params you need to set the header type to this.
   fetch(verifyURL,
       {
@@ -33,25 +51,36 @@ router.get('/login', sessionChecker, function(req, res){
           body: "idtoken=" + idToken,
           headers: { 'Content-type': 'application/x-www-form-urlencoded' }
       })
-      .then(function(res){
-        checkStatus(res);
-        res.json().then(function (json){
-            console.log(json);
+      .then(function(response){
+        checkStatus(response);
+        response.json().then(function (json){
+            req.session.key = json; //store all session variables in key object. When session deletes this object is deleted too.
+            console.log(req.session);
             delete json.token;
-            response.status(200).json(json);
+            //store user variables here, no need to send info back to the client.
+            res.status(200).json(routeUtility.getResponseJson(false, "Successfully Authenticated this session :)."));
         });
       })
       .catch(function(err){
-        response.status(500).send("Backend Services Error:" + err);
+        response.status(500).json(routeUtility.getResponseJson(true, "Internal Server error authenticating this session."));
       });
 
 });
 
 router.get('/logout', function(req, res){
-  if(req.cookies.user_sid) {
-    res.clearCookie('user_sid');
+  if(req.session.key) {
+    req.session.destroy(function(err){
+        if(err){
+            console.log("error destroying session key");
+        } else{
+            console.log("session successfully destroyed");
+            res.redirect('/');
+        }
+    });
+  }else{
+      console.log("no session to destroy, going to login page.");
+      res.redirect('/');
   }
-  res.redirect('/login');
 });
 
 function checkStatus(res) {

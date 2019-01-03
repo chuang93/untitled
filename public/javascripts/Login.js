@@ -17,7 +17,6 @@ function onSignIn(googleUser) {
     xhr.open('POST', verifyURL);
     xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
     xhr.onload = function() {
-        console.log(xhr.response);
         document.getElementById("userId").textContent = "Welcome " + profile.getName();
     };
     xhr.onerror = function(){
@@ -29,8 +28,17 @@ function signOut() {
     console.log("attempting to signout");
     var auth2 = gapi.auth2.getAuthInstance()
     auth2.signOut().then(function () {
-        console.log('User signed out.');
-        document.getElementById("userId").textContent = "";
+        var xhr = new XMLHttpRequest();
+        verifyURL = window.serverURL + "logout";
+        xhr.open('GET', verifyURL);
+        xhr.onload = function() {
+            console.log('User signed out.');
+            document.getElementById("userId").textContent = "Not Logged in.";
+        };
+        xhr.onerror = function(){
+            console.log('Server error, sign out failed: ' + xhr.errorMessage);
+        };
+        xhr.send();
     });
 }
 

@@ -8,8 +8,10 @@ var logger = require('morgan');
 var sassMiddleware = require('node-sass-middleware')
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
-var app = express();
+var memoryStore = require('memorystore')(session); // need this super constructor call to express session module.
+var constants = require('./public/javascripts/Constants');
 
+var app = express();
 console.log("Current Server __dirname is : " + __dirname);
 
 // view engine setup
@@ -31,12 +33,15 @@ app.use(session({
   genid: function(req){
     return uuid();
   },
-  secret: 'mynodeappsecret',
+  secret: constants.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: {
     expires: 600000
-  }
+  },
+  store: new memoryStore({
+    checkPeriod: 86400000 //expire 24 hours. express default memory store doesnt work.
+  }),
 }));
 //Clear cookie if the session doesnt exist anymore (must be initialized AFTER cookieparser()
 app.use((req, res, next) => {
@@ -64,7 +69,6 @@ app.use(function(err, req, res, next) {
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
-
   // render the error page
   res.status(err.status || 500);
   res.render('error');
