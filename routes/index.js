@@ -32,7 +32,6 @@ var sessionChecker = function(req, res, next) {
 //Not logged in homepage
 router.get('/', sessionChecker, function(req, res, next) {
   //if fail session Checker Callback
-
   res.render('index', {title: "Please Log in to edit!"});
 });
 
@@ -63,7 +62,7 @@ router.get('/login', sessionChecker, function(req, res){
         });
       })
       .catch(function(err){
-        response.status(500).json(routeUtility.getResponseJson(true, "Internal Server error authenticating this session."));
+          res.status(500).json(routeUtility.getResponseJson(true, "Internal Server error authenticating this session."));
       });
 
 });
@@ -82,6 +81,24 @@ router.get('/logout', function(req, res){
       console.log("no session to destroy, going to login page.");
       res.redirect('/');
   }
+});
+
+router.get('/clear', function(req, res){
+    if(req.session.key) {
+        req.session.destroy(function(err){
+            if(err){
+                console.log("error destroying session key");
+            } else{
+                let cleared = "session cleared";
+                console.log(cleared);
+                res.send(cleared);
+            }
+        });
+    }else{
+        noClear = "no session to clear";
+        console.log(noClear);
+        res.send(noClear);
+    }
 });
 
 function checkStatus(res) {
