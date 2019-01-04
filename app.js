@@ -1,64 +1,60 @@
 var createError = require('http-errors');
 var express = require('express');
 var uuid = require('uuid');
+var flash = require('express-flash');
 var session = require( 'express-session');
 var path = require('path');
 var cookieParser = require('cookie-parser');
+var bodyParser = require('body-parser');
 var logger = require('morgan');
-var sassMiddleware = require('node-sass-middleware')
+var sassMiddleware = require('node-sass-middleware');
 var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
+var passport = require('./routes/passport');
 var memoryStore = require('memorystore')(session); // need this super constructor call to express session module.
-var constants = require('./public/javascripts/Constants');
+var constants = require('./model/config/constants');
 
 var app = express();
-console.log("Current Server __dirname is : " + __dirname);
+//console.log("Current Server __dirname is : " + __dirname);
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 app.set('json spaces', 2);
-app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
+
+//TODO:: USE ONLY STATIC FILES FROM DISTRIBUTION BUNDLES AND NOT PUBLIC.
+app.use('/dist', express.static(path.join(__dirname, 'dist')));
+app.use('/', express.static(path.join(__dirname, 'public')));
+app.use('/',  express.static(path.join(__dirname, 'public/images')));
+
+//Routes Last.
+
 app.use(sassMiddleware({
   src: path.join(__dirname, 'public'),
   dest: path.join(__dirname, 'public'),
   indentedSyntax: true, // true = .sass and false = .scss
   sourceMap: true
 }));
-
+app.use(logger('dev'));
+app.use(express.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
 app.use(session({
   genid: function(req){
     return uuid();
   },
   secret: constants.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    expires: 600000
-  },
+  resave: true,
+  saveUninitialized: true,
   store: new memoryStore({
     checkPeriod: 86400000 //expire 24 hours. express default memory store doesnt work.
   }),
 }));
-//Clear cookie if the session doesnt exist anymore (must be initialized AFTER cookieparser()
-app.use((req, res, next) => {
-  if (req.cookies.user_sid && !req.session.user) {
-    console.log("cookie user SID exists, session does not, clearing cookie.");
-    res.clearCookie('user_sid');
-  }
-  next();
-});
+app.use(flash());
+app.use(passport.initialize());
+app.use(passport.session());
 
-//ONLY ONE PARAMTER PASSED IN will default the first path parameter to '/'.
-//TODO:: USE ONLY STATIC FILES FROM DISTRIBUTION BUNDLES AND NOT PUBLIC.
-app.use('/dist', express.static(path.join(__dirname, 'dist')));
-app.use('/', express.static(path.join(__dirname, 'public')));
-app.use('/',  express.static(path.join(__dirname, 'public/images')));
 app.use('/', indexRouter);
-app.use('/users', usersRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -74,5 +70,7 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.render('error');
 });
+
+
 
 module.exports = app;

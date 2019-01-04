@@ -1,8 +1,16 @@
-const getResponseJson = function(isError, message){
-    return {
-        error: isError,
-        message: message,
+function isAuthenticated(req, res, next){
+    if (req.isAuthenticated())
+        return next();
+    res.redirect('/user/login');
+}
+function checkStatus(res) {
+    if (res.status === 200 ) {
+        return res;
+    } else {
+        throw Error(res.statusText);
     }
+}
+module.exports = {
+    isAuthenticated: isAuthenticated,
+    checkStatus: checkStatus,
 };
-
-module.exports.getResponseJson = getResponseJson;
