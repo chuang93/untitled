@@ -1,6 +1,5 @@
 var createError = require('http-errors');
 var express = require('express');
-var uuid = require('uuid');
 var flash = require('express-flash');
 var session = require( 'express-session');
 var path = require('path');
@@ -40,20 +39,22 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(session({
-  genid: function(req){
-    return uuid();
-  },
   secret: constants.SESSION_SECRET,
-  resave: true,
-  saveUninitialized: true,
+  resave: false,
+  saveUninitialized: false,
+  //expire session on server after one day on for now.
+  expires: new Date(Date.now() + (1 /*day*/ * 86400 * 1000)),
+  cookie: {
+    //expire cookie data sent to browser.
+    expires: new Date(Date.now() + (1 /*day*/ * 86400 * 1000)),
+  },
   store: new memoryStore({
     checkPeriod: 86400000 //expire 24 hours. express default memory store doesnt work.
   }),
 }));
-app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
-
+app.use(flash());
 app.use('/', indexRouter);
 
 // catch 404 and forward to error handler

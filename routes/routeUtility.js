@@ -1,7 +1,9 @@
 function isAuthenticated(req, res, next){
+    console.log("Authenticating session from request: '" + req.url + "'");
     if (req.isAuthenticated())
         return next();
-    res.redirect('/user/login');
+    console.log("request is not authenticated, please log in again");
+    res.redirect('/login');
 }
 function checkStatus(res) {
     if (res.status === 200 ) {

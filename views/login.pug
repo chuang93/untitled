@@ -12,4 +12,6 @@ block content
         input.form-control(type='password', name='password', placeholder='Password')
         label.checkbox
         |
-        button.btn.btn-lg.btn-primary.btn-block(type='submit') Login
+        button(type='submit') Login
+    form.form-logout(method='get', action = '/logout')
+        button(type='submit') Logout
