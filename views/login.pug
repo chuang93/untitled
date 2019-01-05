@@ -1,7 +1,7 @@
 extends layout
 
 block content
-    form.form-signin(method='post', action='/login')
+    form.form-login(method='post', action='/login')
 
         h3.form-signin-heading Nodejs MySQL Login Script
         |
@@ -15,3 +15,25 @@ block content
         button(type='submit') Login
     form.form-logout(method='get', action = '/logout')
         button(type='submit') Logout
+    br
+    br
+    form.form-signin(method='post', action='/signup')
+
+        h3.form-signin-heading Please Fill out the required fields
+        |
+        if(message)
+        p(style='color:red') #{message}
+        input.form-control(type='text', name='firstName', placeholder='First Name')
+        |
+        input.form-control(type='text', name='lastName', placeholder='Last Name')
+        |
+        input.form-control(type='text', name='username', placeholder='Username')
+        |
+        input.form-control(type='password', name='password', placeholder='Password')
+        |
+        input.form-control(type='password', name='passwordConfirm', placeholder='Confirm Password')
+        |
+        input.form-control(type='text', name='email', placeholder='Email Address')
+        label.checkbox
+        |
+        button(type='submit') Register

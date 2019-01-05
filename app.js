@@ -5,7 +5,7 @@ var session = require( 'express-session');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
-var logger = require('morgan');
+var morgan = require('morgan');
 var sassMiddleware = require('node-sass-middleware');
 var indexRouter = require('./routes/index');
 var passport = require('./routes/passport');
@@ -33,7 +33,7 @@ app.use(sassMiddleware({
   indentedSyntax: true, // true = .sass and false = .scss
   sourceMap: true
 }));
-app.use(logger('dev'));
+app.use(morgan('dev'));
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.urlencoded({ extended: false }));
@@ -52,18 +52,25 @@ app.use(session({
     checkPeriod: 86400000 //expire 24 hours. express default memory store doesnt work.
   }),
 }));
+
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(flash());
-app.use('/', indexRouter);
 
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
+app.use('/', indexRouter);
+// catch 404 and forward to error handler // if no path is supplied then this function executes every time
+// a request is received. you must use next() if this middleware does not return a response.
+app.use(function(request, res, next) {
   next(createError(404));
 });
 
+
 // error handler
 app.use(function(err, req, res, next) {
+  if(err){
+    //TODO::CONSIDER IMPLEMENTATION WHERE IF DESERIALIZE USER IS NOT FROM LOGIN PAGE, REDIRECT BACK TO LOGIN PAGE.
+    req.logout(); //make sure that the passport session is logged out so deserialize user will not be called anymore.
+  }
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
